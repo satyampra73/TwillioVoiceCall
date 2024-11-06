@@ -2,6 +2,7 @@ package com.db.twilliovoicecall
 
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -15,6 +16,7 @@ import com.twilio.voice.Voice
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val numberBuilder = StringBuilder()
+    private var call: Call? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -38,6 +40,13 @@ class MainActivity : AppCompatActivity() {
         binding.buttonCall.setOnClickListener {
             makeCall()
         }
+        binding.btnClear.setOnClickListener{
+            binding.numberDisplay.text=""
+            numberBuilder.clear()
+        }
+        binding.btnDisconnect.setOnClickListener{
+
+        }
     }
 
     // Append clicked number or symbol to the display
@@ -48,12 +57,19 @@ class MainActivity : AppCompatActivity() {
 
     // Placeholder for call function
     private fun makeCall() {
-        val enteredNumber = numberBuilder.toString()
+        val enteredNumber = "+91" + numberBuilder.toString()
         if (enteredNumber.isNotEmpty()) {
             // Fetch the access token from your server
             fetchAccessToken { accessToken ->
                 // Using the second connect method which directly takes the accessToken string
-                Voice.connect(applicationContext, accessToken, callListener)
+                val connectOptions = ConnectOptions.Builder(accessToken)
+                    .params(mapOf(
+                        "to" to enteredNumber,
+                        "from" to "+16316145120"  // Your Twilio-verified number
+                    ))
+                    .build()
+
+                Voice.connect(applicationContext, connectOptions, callListener)
 
                 // Update UI
                 binding.numberDisplay.text = "Calling $enteredNumber..."
@@ -68,7 +84,7 @@ class MainActivity : AppCompatActivity() {
     private fun fetchAccessToken(callback: (String) -> Unit) {
         // Implement network call to get the token from your server
         // For demonstration, we'll assume you get the token successfully and invoke callback with it
-        val accessToken = "YOUR_ACCESS_TOKEN_HERE"  // Replace with actual token from server
+        val accessToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTS2I2NjNhZjljOGZiNmVkYTM2ZDJiNDg5YWQ0MGIzM2JkLTE3MzA4OTUwODciLCJpc3MiOiJTS2I2NjNhZjljOGZiNmVkYTM2ZDJiNDg5YWQ0MGIzM2JkIiwic3ViIjoiQUNhMjkyODhjM2Q2YzM5NWRlOGVhMTg5ZGNkOWNkYzNkZSIsImV4cCI6MTczMDg5ODY4NywiZ3JhbnRzIjp7ImlkZW50aXR5IjoiaHNkN2pzc3V3ayIsInZvaWNlIjp7ImluY29taW5nIjp7ImFsbG93Ijp0cnVlfSwib3V0Z29pbmciOnsiYXBwbGljYXRpb25fc2lkIjoiQVBjNGI0NmU2ZmE4MzM5N2Y4ZWIxZjA1ZTk2YzM0ZTg5NSJ9fX19.d4jyarFaG8emLT5Qt5AQ0NV-jIk3R7NcW2Mv4n9jkrE"  // Replace with actual token from server
         callback(accessToken)
     }
 
@@ -86,6 +102,7 @@ class MainActivity : AppCompatActivity() {
 
         override fun onConnected(call: Call) {
             binding.numberDisplay.text = "Connected"
+            binding.btnDisconnect.visibility = View.VISIBLE
         }
 
         override fun onReconnecting(call: Call, callException: CallException) {
@@ -100,4 +117,6 @@ class MainActivity : AppCompatActivity() {
             binding.numberDisplay.text = "Call ended"
         }
     }
+
+
 }

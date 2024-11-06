@@ -129,6 +129,16 @@
         </GridLayout>
 
         <!-- Call button -->
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnClear"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Clear"
+            android:textSize="18sp"
+            android:background="@color/grey"
+            android:textColor="@android:color/white"
+            android:layout_marginTop="16dp"
+            android:padding="12dp" />
         <Button
             android:id="@+id/button_call"
             android:layout_width="match_parent"
@@ -136,6 +146,18 @@
             android:text="Call"
             android:textSize="18sp"
             android:background="@android:color/holo_green_dark"
+            android:textColor="@android:color/white"
+            android:layout_marginTop="16dp"
+            android:padding="12dp" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnDisconnect"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="End"
+            android:textSize="18sp"
+            android:visibility="gone"
+            android:background="@color/red"
             android:textColor="@android:color/white"
             android:layout_marginTop="16dp"
             android:padding="12dp" />
