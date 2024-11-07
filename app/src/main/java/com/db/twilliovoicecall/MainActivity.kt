@@ -95,21 +95,10 @@ class MainActivity : AppCompatActivity() {
         binding.numberDisplay.text = numberBuilder.toString()
     }
 
-    // Placeholder for call function
     private fun makeCall() {
         val enteredNumber = "91" + numberBuilder.toString()
         if (enteredNumber.isNotEmpty()) {
-            // Fetch the access token from your server
             fetchAccessToken { accessToken ->
-                // Using the second connect method which directly takes the accessToken string
-//                val connectOptions = ConnectOptions.Builder(accessToken)
-//                    .params(mapOf(
-//                        "to" to enteredNumber,
-//                        "from" to "+16316145120"  // Your Twilio-verified number
-//                    ))
-//                    .build()
-                val twimlUrl =
-                    "https://twilio.developerbrothersproject.com/api/twilio/dial/$enteredNumber"
 
                 val connectOptions = ConnectOptions.Builder(accessToken)
                     .params(mapOf("To" to enteredNumber))
