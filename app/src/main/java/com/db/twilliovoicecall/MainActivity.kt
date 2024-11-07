@@ -1,13 +1,20 @@
 package com.db.twilliovoicecall
 
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.android.volley.Request
+import com.android.volley.toolbox.JsonObjectRequest
+import com.android.volley.toolbox.Volley
 import com.db.twilliovoicecall.databinding.ActivityMainBinding
+import com.db.twilliovoicecall.utils.CustomProgressBar
 import com.twilio.voice.Call
 import com.twilio.voice.CallException
 import com.twilio.voice.ConnectOptions
@@ -17,6 +24,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val numberBuilder = StringBuilder()
     private var call: Call? = null
+    var accessToken :String = ""
+    val progressBar = CustomProgressBar()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -38,14 +47,45 @@ class MainActivity : AppCompatActivity() {
 
         // Set click listener for call button
         binding.buttonCall.setOnClickListener {
-            makeCall()
+            if (binding.numberDisplay.text.toString().trim().isEmpty()) {
+                Toast.makeText(
+                    this@MainActivity,
+                    "Please Dial 10 Digit Mobile Number.",
+                    Toast.LENGTH_SHORT
+                ).show()
+            } else if (binding.numberDisplay.text.toString().length < 10) {
+                Toast.makeText(
+                    this@MainActivity,
+                    "Please Dial 10 Digit Mobile Number.",
+                    Toast.LENGTH_SHORT
+                ).show()
+            } else {
+                makeCall()
+            }
         }
-        binding.btnClear.setOnClickListener{
-            binding.numberDisplay.text=""
+        binding.btnClear.setOnClickListener {
+            binding.numberDisplay.text = ""
             numberBuilder.clear()
         }
-        binding.btnDisconnect.setOnClickListener{
+        binding.btnDisconnect.setOnClickListener {
+            call?.disconnect()
+        }
 
+        requestPermissions()
+        fetchAccessToken()
+    }
+
+    private fun requestPermissions() {
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.RECORD_AUDIO
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(android.Manifest.permission.RECORD_AUDIO),
+                1
+            )
         }
     }
 
@@ -57,19 +97,27 @@ class MainActivity : AppCompatActivity() {
 
     // Placeholder for call function
     private fun makeCall() {
-        val enteredNumber = "+91" + numberBuilder.toString()
+        val enteredNumber = "91" + numberBuilder.toString()
         if (enteredNumber.isNotEmpty()) {
             // Fetch the access token from your server
             fetchAccessToken { accessToken ->
                 // Using the second connect method which directly takes the accessToken string
+//                val connectOptions = ConnectOptions.Builder(accessToken)
+//                    .params(mapOf(
+//                        "to" to enteredNumber,
+//                        "from" to "+16316145120"  // Your Twilio-verified number
+//                    ))
+//                    .build()
+                val twimlUrl =
+                    "https://twilio.developerbrothersproject.com/api/twilio/dial/$enteredNumber"
+
                 val connectOptions = ConnectOptions.Builder(accessToken)
-                    .params(mapOf(
-                        "to" to enteredNumber,
-                        "from" to "+16316145120"  // Your Twilio-verified number
-                    ))
+                    .params(mapOf("To" to enteredNumber))
                     .build()
 
-                Voice.connect(applicationContext, connectOptions, callListener)
+
+               call = Voice.connect(applicationContext, connectOptions, callListener)
+
 
                 // Update UI
                 binding.numberDisplay.text = "Calling $enteredNumber..."
@@ -80,11 +128,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // Function to fetch access token from the server
     private fun fetchAccessToken(callback: (String) -> Unit) {
-        // Implement network call to get the token from your server
-        // For demonstration, we'll assume you get the token successfully and invoke callback with it
-        val accessToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTS2I2NjNhZjljOGZiNmVkYTM2ZDJiNDg5YWQ0MGIzM2JkLTE3MzA4OTUwODciLCJpc3MiOiJTS2I2NjNhZjljOGZiNmVkYTM2ZDJiNDg5YWQ0MGIzM2JkIiwic3ViIjoiQUNhMjkyODhjM2Q2YzM5NWRlOGVhMTg5ZGNkOWNkYzNkZSIsImV4cCI6MTczMDg5ODY4NywiZ3JhbnRzIjp7ImlkZW50aXR5IjoiaHNkN2pzc3V3ayIsInZvaWNlIjp7ImluY29taW5nIjp7ImFsbG93Ijp0cnVlfSwib3V0Z29pbmciOnsiYXBwbGljYXRpb25fc2lkIjoiQVBjNGI0NmU2ZmE4MzM5N2Y4ZWIxZjA1ZTk2YzM0ZTg5NSJ9fX19.d4jyarFaG8emLT5Qt5AQ0NV-jIk3R7NcW2Mv4n9jkrE"  // Replace with actual token from server
         callback(accessToken)
     }
 
@@ -93,7 +137,7 @@ class MainActivity : AppCompatActivity() {
         override fun onConnectFailure(call: Call, callException: CallException) {
             callException.printStackTrace()
             binding.numberDisplay.text = "Call Failed !!"
-            Log.d("strVoice",callException.toString())
+            Log.d("strVoice", callException.toString())
         }
 
         override fun onRinging(call: Call) {
@@ -116,6 +160,38 @@ class MainActivity : AppCompatActivity() {
         override fun onDisconnected(call: Call, error: CallException?) {
             binding.numberDisplay.text = "Call ended"
         }
+    }
+    fun fetchAccessToken() {
+        progressBar.showProgress(this@MainActivity)
+        // URL for your API endpoint
+        val url = "https://twilio.developerbrothersproject.com/api/generate-token"
+
+        // Create a Volley request queue
+        val requestQueue = Volley.newRequestQueue(this)
+
+        // Create a JSON request
+        val jsonObjectRequest = JsonObjectRequest(
+            Request.Method.GET, url, null,
+            { response ->
+                progressBar.hideProgress()
+                // Handle the JSON response
+                val token = response.optString("token")
+                if (token.isNotEmpty()) {
+                    // Use the token as needed
+                    accessToken = token
+                } else {
+                    Log.d("strResponse","Token not Found")
+                }
+            },
+            { error ->
+                progressBar.hideProgress()
+                // Handle error
+                Log.d("strResponse","Api error!")
+            }
+        )
+
+        // Add the request to the queue
+        requestQueue.add(jsonObjectRequest)
     }
 
 
