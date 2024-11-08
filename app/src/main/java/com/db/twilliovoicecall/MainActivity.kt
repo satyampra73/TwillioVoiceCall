@@ -1,5 +1,6 @@
 package com.db.twilliovoicecall
 
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
@@ -23,7 +24,9 @@ import com.twilio.voice.Voice
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val numberBuilder = StringBuilder()
-    private var call: Call? = null
+    companion object{
+        var call: Call? = null
+    }
     var accessToken :String = ""
     val progressBar = CustomProgressBar()
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -136,6 +139,9 @@ class MainActivity : AppCompatActivity() {
         override fun onConnected(call: Call) {
             binding.numberDisplay.text = "Connected"
             binding.btnDisconnect.visibility = View.VISIBLE
+            val intent = Intent(this@MainActivity, CallActivity::class.java)
+            startActivity(intent)
+            finish()
         }
 
         override fun onReconnecting(call: Call, callException: CallException) {
