@@ -1,27 +1,51 @@
 package com.db.twilliovoicecall
 
+import android.content.Context
 import android.content.Intent
+import android.media.AudioManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.db.twilliovoicecall.databinding.ActivityCallBinding
 import java.util.concurrent.TimeUnit
 
 class CallActivity : AppCompatActivity() {
-    lateinit var binding : ActivityCallBinding
+    lateinit var binding: ActivityCallBinding
     private val handler = Handler(Looper.getMainLooper())
     private var callDurationInSeconds = 0
-
-
+    var phoneNumber = ""
+    private lateinit var audioManager: AudioManager
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityCallBinding.inflate(layoutInflater)
         setContentView(binding.root)
         startCallTimer()
 
+        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+
+        // Set initial speaker status
+        updateSpeakerStatus(false)
+        phoneNumber = intent.getStringExtra("mobile") ?: ""
+        Log.d("strData", "Phone Number : " + phoneNumber)
+        binding.txtMobile.text = phoneNumber
+
         binding.hangupButton.setOnClickListener {
             endCall()
+        }
+
+        binding.imgSpeakerOn.setOnClickListener {
+            updateSpeakerStatus(true)
+            binding.imgSpeakerOn.visibility = View.GONE
+            binding.imgSpeakerOff.visibility = View.VISIBLE
+        }
+
+        binding.imgSpeakerOff.setOnClickListener {
+            updateSpeakerStatus(false)
+            binding.imgSpeakerOn.visibility = View.VISIBLE
+            binding.imgSpeakerOff.visibility = View.GONE
         }
     }
 
@@ -47,5 +71,9 @@ class CallActivity : AppCompatActivity() {
         startActivity(intent)
         finish()
         // Perform additional actions to end the call here
+    }
+
+    private fun updateSpeakerStatus(enableSpeaker: Boolean) {
+        audioManager.isSpeakerphoneOn = enableSpeaker
     }
 }

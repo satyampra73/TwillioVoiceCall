@@ -113,7 +113,6 @@ class MainActivity : AppCompatActivity() {
 
                 // Update UI
                 binding.numberDisplay.text = "Calling $enteredNumber..."
-                numberBuilder.clear()
             }
         } else {
             binding.numberDisplay.text = "Enter number"
@@ -140,6 +139,7 @@ class MainActivity : AppCompatActivity() {
             binding.numberDisplay.text = "Connected"
             binding.btnDisconnect.visibility = View.VISIBLE
             val intent = Intent(this@MainActivity, CallActivity::class.java)
+            intent.putExtra("mobile", "+91"+numberBuilder.toString())
             startActivity(intent)
             finish()
         }
@@ -159,7 +159,7 @@ class MainActivity : AppCompatActivity() {
     fun fetchAccessToken() {
         progressBar.showProgress(this@MainActivity)
         // URL for your API endpoint
-        val url = "https://twilio.developerbrothersproject.com/api/generate-token"
+        val url = "https://krcodingcaffeine.com/anti/api/generate-token"
 
         // Create a Volley request queue
         val requestQueue = Volley.newRequestQueue(this)
